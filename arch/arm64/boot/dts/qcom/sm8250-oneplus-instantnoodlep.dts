@@ -525,35 +525,6 @@
        status = "disabled";
 };
 
-&dsi0 {
-	vdda-supply = <&vreg_l9a_1p2>;
-	qcom,dual-dsi-mode;
-	qcom,master-dsi;
-	qcom,sync-dual-dsi;
-	status = "okay";
-};
-
-&dsi0_phy {
-	vdds-supply = <&vreg_l5a_0p88>;
-	phy-type = <PHY_TYPE_CPHY>;
-	status = "okay";
-};
-
-&dsi1 {
-	vdda-supply = <&vreg_l9a_1p2>;
-	qcom,dual-dsi-mode;
-	qcom,sync-dual-dsi;
-	/* DSI1 is slave, so use DSI0 clocks */
-	assigned-clock-parents = <&dsi0_phy 0>, <&dsi0_phy 1>;
-	status = "okay";
-};
-
-&dsi1_phy {
-	vdds-supply = <&vreg_l5a_0p88>;
-	phy-type = <PHY_TYPE_CPHY>;
-	status = "okay";
-};
-
 &gmu {
 	status = "okay";
 };
