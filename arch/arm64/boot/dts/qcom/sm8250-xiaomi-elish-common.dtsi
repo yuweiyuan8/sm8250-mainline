@@ -179,14 +179,6 @@
 			no-map;
 		};
 	};
-
-	extcon_usb: extcon-usb {
-		compatible = "linux,extcon-usb-gpio";
-		id-gpio = <&tlmm 91 GPIO_ACTIVE_HIGH>;
-		vbus-gpio = <&pm8150_gpios 10 GPIO_ACTIVE_HIGH>;
-		pinctrl-0 = <&keyboard_active &usb_2_vbus_det_n>;
-		pinctrl-names = "default";
-	};
 };
 
 &adsp {
@@ -801,14 +793,6 @@
 };
 
 &pm8150_gpios {
-	usb_2_vbus_det_n: usb-2-vbus-det-state {
-		pins = "gpio10";
-		function = "normal";
-		power-source = <1>;
-		input-enable;
-		bias-pull-down;
-	};
-
 	vol_up_n: vol-up-n-state {
 		pins = "gpio6";
 		function = "normal";
@@ -849,6 +833,13 @@
 				reg = <0>;
 				pm8150b_typec_hsphy_in: endpoint {
 					remote-endpoint = <&usb_1_dwc3_hs>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				pm8150b_typec_ssphy_in: endpoint {
+					remote-endpoint = <&usb_2_dwc3_ss>;
 				};
 			};
 		};
@@ -1096,7 +1087,10 @@
 &usb_2_dwc3 {
 	dr_mode = "host";
 	maximum-speed = "super-speed";
-	extcon = <&extcon_usb>;
+};
+
+&usb_2_dwc3_ss {
+	remote-endpoint = <&pm8150b_typec_ssphy_in>;
 };
 
 &usb_2_hsphy {
@@ -1110,6 +1104,9 @@
 	vdda-phy-supply = <&vreg_l9a_1p2>;
 	vdda-pll-supply = <&vreg_l18a_0p9>;
 	status = "okay";
+
+	pinctrl-0 = <&keyboard_active>;
+	pinctrl-names = "default";
 };
 
 &ufs_mem_hc {
