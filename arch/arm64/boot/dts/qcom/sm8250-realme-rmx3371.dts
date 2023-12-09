@@ -1,0 +1,205 @@
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/arm/qcom,ids.h>
+#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/phy/phy.h>
+#include "sm8250.dtsi"
+#include "pm8150.dtsi"
+#include "pm8150b.dtsi"
+#include "pm8150l.dtsi"
+#include "pm8009.dtsi"
+
+/*
+ * Delete following upstream (sm8250.dtsi) reserved
+ * memory mappings which are different in this device.
+ */
+
+/ {
+	model = "Realme GT Neo 3T (rmx3371)";
+	compatible = "realme,rmx3371", "qcom,kona", "qcom,sm8250";
+	chassis-type = "handset";
+
+	qcom,msm-id = <0x164 0x20001>;
+	qcom,board-id = <0x10008 0x00>;
+
+	aliases {
+		hsuart0 = &uart6;
+	};
+
+	chosen {
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		ranges;
+		stdout-path = "framebuffer0";
+
+		framebuffer0: framebuffer@9c000000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0x9c000000 0x0 0x9e3400>;
+			width = <0x438>;
+			height = <0x960>;
+			stride = <0x10e0>;
+			format = "a8r8g8b8";
+		};
+	};
+    
+	reserved-memory {
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		ranges;
+
+		memory@80000000 {
+			reg = <0x00 0x80000000 0x00 0x600000>;
+			no-map;
+		};
+
+		memory@80700000 {
+			reg = <0x00 0x80700000 0x00 0x160000>;
+			no-map;
+		};
+
+		memory@80860000 {
+			compatible = "qcom,cmd-db";
+			reg = <0x00 0x80860000 0x00 0x20000>;
+			no-map;
+		};
+
+		memory@80900000 {
+			reg = <0x00 0x80900000 0x00 0x200000>;
+			no-map;
+			phandle = <0x29>;
+		};
+
+		memory@80b00000 {
+			reg = <0x00 0x80b00000 0x00 0xcd00000>;
+			no-map;
+		};
+
+		memory@8dc00000 {
+			reg = <0x00 0x8dc00000 0x00 0x500000>;
+			no-map;
+		};
+
+		memory@8e100000 {
+			reg = <0x00 0x8e100000 0x00 0x100000>;
+			no-map;
+		};
+
+		memory@8e200000 {
+			reg = <0x00 0x8e200000 0x00 0x10000>;
+			no-map;
+		};
+
+		memory@8e210000 {
+			reg = <0x00 0x8e210000 0x00 0xa000>;
+			no-map;
+		};
+
+		memory@8e21a000 {
+			reg = <0x00 0x8e21a000 0x00 0x2000>;
+			no-map;
+			phandle = <0x70>;
+		};
+
+		memory@8e300000 {
+			reg = <0x00 0x8e300000 0x00 0x500000>;
+			no-map;
+		};
+
+		memory@8e800000 {
+			reg = <0x00 0x8e800000 0x00 0x500000>;
+			no-map;
+			phandle = <0xb5>;
+		};
+
+		memory@8ed00000 {
+			reg = <0x00 0x8ed00000 0x00 0x500000>;
+			no-map;
+		};
+
+		memory@8f200000 {
+			reg = <0x00 0x8f200000 0x00 0x1400000>;
+			no-map;
+			phandle = <0xa9>;
+		};
+
+		memory@90600000 {
+			reg = <0x00 0x90600000 0x00 0x1500000>;
+			no-map;
+			phandle = <0x75>;
+		};
+
+		memory@91b00000 {
+			reg = <0x00 0x91b00000 0x00 0x2500000>;
+			no-map;
+			phandle = <0xcf>;
+		};
+
+		memory@94000000 {
+			reg = <0x00 0x94000000 0x00 0x100000>;
+			no-map;
+		};
+
+		memory@94100000 {
+			reg = <0x00 0x94100000 0x00 0x4600000>;
+			no-map;
+		};
+
+		memory@9c000000 {
+			reg = <0x00 0x9c000000 0x00 0x2300000>;
+			no-map;
+		};
+
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0x00 0xb0000000 0x00 0x400000>;
+			record-size = <0x40000>;
+			console-size = <0x40000>;
+			ecc-size = <0x00>;
+			no-map;
+		};
+	};
+	&usb_1 {
+	/* USB 2.0 only */
+	qcom,select-utmi-as-pipe-clk;
+	status = "okay";
+};
+
+&usb_1_dwc3 {
+	dr_mode = "peripheral";
+	maximum-speed = "high-speed";
+	/* Remove USB3 phy */
+	phys = <&usb_1_hsphy>;
+	phy-names = "usb2-phy";
+};
+
+&usb_1_hsphy {
+	vdda-pll-supply = <&vreg_l5a_0p88>;
+	vdda18-supply = <&vreg_l12a_1p8>;
+	vdda33-supply = <&vreg_l2a_3p1>;
+	status = "okay";
+};
+
+&usb_2 {
+	status = "okay";
+};
+
+&usb_2_dwc3 {
+	dr_mode = "host";
+};
+
+&usb_2_hsphy {
+	status = "okay";
+
+	vdda-pll-supply = <&vreg_l5a_0p88>;
+	vdda33-supply = <&vreg_l2a_3p1>;
+	vdda18-supply = <&vreg_l12a_1p8>;
+};
+
+&usb_2_qmpphy {
+	status = "okay";
+
+	vdda-phy-supply = <&vreg_l9a_1p2>;
+	vdda-pll-supply = <&vreg_l18a_0p92>;
+};
+};
