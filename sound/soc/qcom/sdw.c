@@ -5,7 +5,11 @@
 #include <dt-bindings/sound/qcom,q6afe.h>
 #include <linux/module.h>
 #include <sound/soc.h>
+#include <sound/pcm_params.h>
+#include "qdsp6/q6afe.h"
 #include "sdw.h"
+
+static unsigned int tdm_slot_offset[8] = {0, 4, 8, 12, 16, 20, 24, 28};
 
 int qcom_snd_sdw_prepare(struct snd_pcm_substream *substream,
 			 struct sdw_stream_runtime *sruntime,
@@ -58,6 +62,66 @@ int qcom_snd_sdw_prepare(struct snd_pcm_substream *substream,
 }
 EXPORT_SYMBOL_GPL(qcom_snd_sdw_prepare);
 
+static int qcom_tdm_snd_hw_params(struct snd_pcm_substream *substream,
+					struct snd_pcm_hw_params *params)
+{
+	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+
+	int ret = 0;
+	int channels, slot_width;
+
+	switch (params_format(params)) {
+	case SNDRV_PCM_FORMAT_S16_LE:
+	case SNDRV_PCM_FORMAT_S24_LE:
+	case SNDRV_PCM_FORMAT_S32_LE:
+	  slot_width = 32;
+	  break;
+	default:
+	  dev_err(rtd->dev, "%s: invalid param format 0x%x\n",
+	          __func__, params_format(params));
+	  return -EINVAL;
+	}
+
+	channels = params_channels(params);
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+	  ret = snd_soc_dai_set_tdm_slot(cpu_dai, 0, 0x03,
+	                  8, slot_width);
+	  if (ret < 0) {
+	          dev_err(rtd->dev, "%s: failed to set tdm slot, err:%d\n",
+	                          __func__, ret);
+	          goto end;
+	  }
+
+	  ret = snd_soc_dai_set_channel_map(cpu_dai, 0, NULL,
+	                  channels, tdm_slot_offset);
+	  if (ret < 0) {
+	          dev_err(rtd->dev, "%s: failed to set channel map, err:%d\n",
+	                          __func__, ret);
+	          goto end;
+	  }
+	} else {
+	   ret = snd_soc_dai_set_tdm_slot(cpu_dai, 0xf, 0,
+	                    8, slot_width);
+	   if (ret < 0) {
+	      dev_err(rtd->dev, "%s: failed to set tdm slot, err:%d\n",
+	              __func__, ret);
+	      goto end;
+	    }
+
+	   ret = snd_soc_dai_set_channel_map(cpu_dai, channels,
+	                    tdm_slot_offset, 0, NULL);
+	   if (ret < 0) {
+	      dev_err(rtd->dev, "%s: failed to set channel map, err:%d\n",
+	              __func__, ret);
+	      goto end;
+	   }
+	}
+
+end:
+	return ret;
+}
+
 int qcom_snd_sdw_hw_params(struct snd_pcm_substream *substream,
 			   struct snd_pcm_hw_params *params,
 			   struct sdw_stream_runtime **psruntime)
@@ -81,6 +145,9 @@ int qcom_snd_sdw_hw_params(struct snd_pcm_substream *substream,
 			if (sruntime != ERR_PTR(-ENOTSUPP))
 				*psruntime = sruntime;
 		}
+		break;
+	case PRIMARY_TDM_RX_0...QUINARY_TDM_TX_7:
+		qcom_tdm_snd_hw_params(substream, params);
 		break;
 	}
 
